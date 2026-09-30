@@ -7,21 +7,23 @@ Houdini 的 AI 工具集。**不走 MCP**——不监听任何端口，只有向
 
 ## 环境
 
-Houdini 20 以上、Python 3（Houdini 自带），没有第三方依赖，不用 pip 装任何东西。
-开发时用的是 Houdini 22.0.368 + Python 3.13.10。Windows 上验证过，Mac / Linux 没测。
+Houdini 自带 Python 3，不用 pip 装任何东西，核心功能零第三方依赖。
+开发和验证都在 Houdini 22.0.368 + Python 3.13.10 上做的，更早的版本没测过
+（用到的 `hou.pypanel.installFile` 之类要求哪个最低版本，我没有查证）。
+Windows 上验证过，macOS / Linux 没测。
 
 ## 快速开始
 
 ```bash
-git clone <这个仓库>
+git clone https://github.com/lmy-2004/houdini-ai.git
 cd houdini-ai
 "D:/ProgramFiles/Houdini22/bin/hython.exe" scripts/install.py --check   # 看部署状态
 "D:/ProgramFiles/Houdini22/bin/hython.exe" scripts/install.py           # 装进去
 ```
 
-把 hython 的路径换成你自己的 Houdini 安装位置。装的动作是往两个 pref 目录
-（`$HOUDINI_USER_PREF_DIR` 和家目录那份）写工具架和面板的桩文件，桩文件只做
-`sys.path.insert` 然后 import 这个仓库里的真代码，所以之后改代码不用重装。
+把 hython 的路径换成你自己的。装的动作是往 Houdini 的 pref 目录写 4 个桩文件，
+桩文件只做 `sys.path.insert` 然后 import 这个仓库里的真代码，所以之后改代码不用重装。
+**装完重启 Houdini。**
 
 **重启 Houdini** 之后：
 
@@ -31,10 +33,11 @@ cd houdini-ai
 4. 提修改意见：工具架 `AI` → `AI Panel`，下半部的输入框
 
 网关地址和密钥从 `~/.claude/settings.json` 自动捡（协议是 Anthropic Messages API，
-官方 Anthropic 和任何兼容网关都能直接换）。要覆盖就复制 `config.json.example`
-成 `config.json` 改——那个文件不进版本库，因为里面可能有明文密钥。
+官方 Anthropic 和任何兼容网关都能直接换）。别的机器上就复制 `config.json.example`
+成 `config.json` 改三行，那个文件不进版本库。
 
-**完整说明见 [docs/AI节点.md](docs/AI节点.md)**（含已知限制和实测质量记录）。
+**完整的安装说明、踩坑清单、卸载方式见 [INSTALL.md](INSTALL.md)。**
+**用法与已知限制见 [docs/AI节点.md](docs/AI节点.md)。**
 
 ## ★ 命令桥：把 Python 送进跑着的 Houdini
 
@@ -89,6 +92,8 @@ deploy/          ★ 部署模板（改了要重跑 install，或点重载按钮
 scripts/         安装脚本
 tests/           测试（用 hython 跑，不需要 pytest）
 docs/AI节点.md   使用说明
+INSTALL.md       装到另一台电脑的完整说明
+.claude/skills/  让 Claude Code 自己动手装的技能（同上，简版）
 ```
 
 装在 pref 目录里的是**两个**「桩文件」（工具架、面板），
