@@ -1,0 +1,18 @@
+# 本地配置。可能含明文密钥，绝不入库。
+# 默认值和可选项见 config.json.example。
+config.json
+
+# 节点文档的抓取缓存。是缓存不是内容——删了下次联网会重抓。
+.cache/
+
+# Houdini 跑测试时产生的
+__pycache__/
+*.pyc
+
+# 测试产物
+*.hip
+*.hipnc
+
+# 测试跑起来时现场生成的临时文件（.npz 夹具、假 runner 脚本等）。
+# 每次跑测试会重写，不是内容。
+tests/_tmp/

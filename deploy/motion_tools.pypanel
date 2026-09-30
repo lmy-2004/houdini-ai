@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 动作生成面板的 Python Panel 定义。
+
+     ★ 这是一个**独立的 PaneTabType**（hou.paneTabType.PythonPanel 的一个接口），
+       和 AI 面板是平级的两个面板，各自可以单独停靠、拖动、关掉。
+       **不是**塞在 AI 面板里面的子标签页——那样不是 pane tab，
+       没法跟视口并排摆，做动画时很难用。
+
+     ★ .pypanel 是 **XML**，不是 Python 文件（按纯 Python 写过会报
+       "Start tag expected, '<' not found"）。
+     ★ label 只能是 ASCII（中文会被静默吃掉），中文标签由 deploy 装进会话后用
+       setLabel() 打上去。
+
+     界面本体在 houdini_ai/motion_panel.py 里，这里只做桩：
+     挂 sys.path + 造出那个 QWidget。所以改界面代码不用重新部署，
+     跑一次 reload 就生效。 -->
+<pythonPanelDocument>
+  <interface name="HoudiniMotionGenerate"
+             label="Motion Generate"
+             icon="hicon:/SVGIcons.index?MISC_python.svg"
+             help_url="">
+    <script><![CDATA[import sys
+
+_p = r"__TOOL_ROOT__"
+if _p not in sys.path:
+    sys.path.insert(0, _p)
+
+from houdini_ai import motion_panel
+
+_panel_widget = None
+
+
+def onCreateInterface():
+    """Houdini 在面板第一次显示时调这个，要返回一个 QWidget。"""
+    global _panel_widget
+    if _panel_widget is None:
+        _panel_widget = motion_panel.panel_widget_class()()
+    return _panel_widget
+
+
+def onNodePathChanged(node):
+    """当前节点变了时会被调。选中动作节点就把它同步到面板上。"""
+    global _panel_widget
+    try:
+        from houdini_ai import motion_rig
+        if _panel_widget is None or node is None:
+            return
+        p = node.path()
+        if p in motion_rig.find_motion_containers() or p.startswith("/obj/motion_ai"):
+            _panel_widget.node_path = p
+            _panel_widget.refresh()
+    except Exception:
+        pass
+]]></script>
+    <!-- ★★ 必须是 includeInPaneTabMenu，不是 includeInToolbarMenu！
+         两者完全不同：
+           includeInPaneTabMenu  → 进 **New Pane Tab Type** 菜单（用户右键加面板的那个）
+           includeInToolbarMenu  → 进 Python Panel **内部**的工具条下拉，那里没有这个面板
+         我第一版照抄了 AI 面板用的 includeInToolbarMenu，结果两个面板在
+         New Pane Tab Type 里都找不到。判据是官方的 $HFS/houdini/python_panels/：
+         Log Viewer 等能在这个菜单里看到的，用的都是 includeInPaneTabMenu。
+         menu_position="0" 跟 Constraint Browser / Package Browser 同一批。 -->
+    <includeInPaneTabMenu menu_position="0" create_separator="false"/>
+    <help><![CDATA[动作生成：在 Rig Pose 上打几个关键帧让 AI 补出中间的动作，
+或者只写一句文字描述直接生成一段动作。底部时间轴显示文字段与约束；
+约束按「把播放头拉到目标帧 → 摆好姿势 → 点类型按钮」的方式加。]]></help>
+  </interface>
+</pythonPanelDocument>

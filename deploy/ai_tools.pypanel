@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Houdini Python Panel 定义。
+
+     ★ .pypanel 是 **XML**，不是 Python 文件。早期版本我按纯 Python 写，
+     Houdini 直接报 "Start tag expected, '<' not found"。
+     官方格式参照 $HFS/houdini/help/examples/python_panels/*.pypanel。
+
+     界面本体在 .tools/houdini-ai/houdini_ai/panel.py 里，这里只做桩：
+     挂 sys.path + 造出那个 QWidget。
+     所以改界面代码**不用重新部署、也不用重启 Houdini**，
+     跑一次 houdini_ai.reload.reload_all() 就生效。 -->
+<pythonPanelDocument>
+  <!-- ★ label 也必须是 ASCII：实测中文同样被吃（label="AI 节点" -> "AI "）。
+       中文标签由 houdini_ai/deploy.py 在装进会话之后用 setLabel() 打上去。 -->
+  <interface name="HoudiniAINodes"
+             label="AI Nodes"
+             icon="hicon:/SVGIcons.index?MISC_python.svg"
+             help_url="">
+    <script><![CDATA[import sys
+
+_p = r"__TOOL_ROOT__"
+if _p not in sys.path:
+    sys.path.insert(0, _p)
+
+from houdini_ai import panel
+
+_panel_widget = None
+
+
+def onCreateInterface():
+    """Houdini 在面板第一次显示时调这个，要返回一个 QWidget。"""
+    global _panel_widget
+    if _panel_widget is None:
+        _panel_widget = panel.panel_widget_class()()
+    return _panel_widget
+
+
+def onNodePathChanged(node):
+    """当前节点变了时会被调。选中的是 AI 节点就把它同步到面板上。"""
+    global _panel_widget
+    try:
+        from houdini_ai import node as _node
+        if _panel_widget is not None and node is not None:
+            if _node.is_ai_node(node):
+                _panel_widget.select_path(node.path())
+    except Exception:
+        pass
+]]></script>
+    <!-- ★★ 必须是 includeInPaneTabMenu，不是 includeInToolbarMenu。
+         前者进 **New Pane Tab Type** 菜单（右键加面板那个），后者只进
+         Python Panel 内部的工具条下拉。AI 面板一直用的是后者，
+         所以它也从来没在 New Pane Tab Type 里出现过。 -->
+    <includeInPaneTabMenu menu_position="0" create_separator="false"/>
+    <help><![CDATA[AI 节点面板：上半部是所有 AI 节点的状态表，下半部是选中节点的对话记录和修改意见输入框。]]></help>
+  </interface>
+</pythonPanelDocument>

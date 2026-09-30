@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- AI 工具集（不走 MCP：没有监听端口，只有向网关的出站 HTTPS）。
+
+       ★ 只有三个按钮。曾经有六个，砍掉的理由：
+         - "Build Selected" 和节点自己的「开始构建」按钮完全重复
+         - "Dive Into AI Node" 是 Subnet 双击就有的原生功能
+         - "Convert Subnet" 是低频操作，不该占菜单
+       加按钮之前先问：Houdini 原生做不到吗？节点自己已经有吗？
+
+       ★ 名字要带 "AiSub" 前缀（用户定的）。光叫 "New Node" / "Panel" /
+       "Reload" 太泛——离开这个子菜单就不知道是干什么的了。带上前缀之后，
+       不管在工具架标签页上还是在右键菜单里，一眼就知道是这套东西的。
+
+       ★ 名字用英文。.shelf 解析器按字节读属性值，遇到非 ASCII 就丢字符
+       （实测 label="新建 AI 节点" -> " AI "，数字字符引用也一样被吃）。
+       中文界面在节点参数和 AI 面板里，那些是 Qt 渲染的，没有限制。
+
+       ★ 三套 name 各自独立，别搞混：
+         <toolshelf name> 引用 <tool name>
+         <shelfSet name>  引用 <toolshelf name>
+
+       ★ 每个按钮的脚本先做一次轻量重载（reload_quietly），所以改完
+       houdini_ai/ 里的代码，直接点任意按钮就是新代码，不用重启 Houdini。 -->
+
+  <toolshelf name="houdini_ai_tools" label="AI">
+    <memberTool name="ai_new_node"/>
+    <memberTool name="ai_open_panel"/>
+    <memberTool name="ai_reload"/>
+  </toolshelf>
+
+  <shelfSet name="houdini_ai" label="AI">
+    <memberToolshelf name="houdini_ai_tools"/>
+  </shelfSet>
+
+  <!-- 主入口：建一个 AI 节点 -->
+  <tool name="ai_new_node" label="NewAiSub" icon="SOP_subnet">
+    <toolMenuContext name="network">
+      <contextNetType>SOP</contextNetType>
+    </toolMenuContext>
+    <toolMenuContext name="network">
+      <contextNetType>OBJ</contextNetType>
+    </toolMenuContext>
+    <toolSubmenu>AI</toolSubmenu>
+    <script scriptType="python"><![CDATA[import sys
+_p = r"__TOOL_ROOT__"
+if _p not in sys.path:
+    sys.path.insert(0, _p)
+import houdini_ai.reload as _reload
+_reload.reload_quietly()
+from houdini_ai import shelf
+shelf.new_node_ui(kwargs)]]></script>
+  </tool>
+
+  <!-- 面板：对话记录 + 提修改意见 + 回退 -->
+  <tool name="ai_open_panel" label="AiSubPanel" icon="MISC_python">
+    <toolMenuContext name="network">
+      <contextNetType>SOP</contextNetType>
+    </toolMenuContext>
+    <toolMenuContext name="network">
+      <contextNetType>OBJ</contextNetType>
+    </toolMenuContext>
+    <toolSubmenu>AI</toolSubmenu>
+    <script scriptType="python"><![CDATA[import sys
+_p = r"__TOOL_ROOT__"
+if _p not in sys.path:
+    sys.path.insert(0, _p)
+import houdini_ai.reload as _reload
+_reload.reload_quietly()
+from houdini_ai import shelf
+shelf.open_panel_ui(kwargs)]]></script>
+  </tool>
+
+  <!-- 改完代码不想重启 Houdini 就点它 -->
+  <tool name="ai_reload" label="AiSubReload" icon="BUTTONS_reload">
+    <toolMenuContext name="network">
+      <contextNetType>SOP</contextNetType>
+    </toolMenuContext>
+    <toolMenuContext name="network">
+      <contextNetType>OBJ</contextNetType>
+    </toolMenuContext>
+    <toolSubmenu>AI</toolSubmenu>
+    <script scriptType="python"><![CDATA[import sys
+_p = r"__TOOL_ROOT__"
+if _p not in sys.path:
+    sys.path.insert(0, _p)
+from houdini_ai import reload as _reload
+_ok, _messages = _reload.reload_all(verbose=False)
+_reload.print_report(_ok, _messages)]]></script>
+  </tool>
+
+</shelfDocument>

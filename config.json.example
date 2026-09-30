@@ -1,0 +1,40 @@
+{
+  "_comment": [
+    "把这个文件复制成 config.json 来覆盖默认设置。config.json 不入库（里面可能有密钥）。",
+    "正常情况下你**不需要**动这个文件：网关信息会自动从 ~/.claude/settings.json 捡起来。",
+    "读取顺序：默认值 -> ~/.claude/settings.json -> config.json -> 环境变量。",
+    "下划线开头的键是注释，会被忽略。"
+  ],
+
+  "_base_url_comment": "网关地址。协议是 Anthropic Messages API，所以官方 Anthropic（https://api.anthropic.com）和任何兼容网关都能直接换。",
+  "base_url": "https://api.deepseek.com/anthropic",
+
+  "_api_key_comment": "留空就用 settings.json 里那个。不要写进这个文件再入库。",
+  "api_key": "",
+
+  "_model_comment": "实测 deepseek-flash 可用。Claude Code 里的 deepseek-flash[1m] 那种带方括号的后缀是它私有的，直连会被去掉。想提质量就在这儿换更强的模型。",
+  "model": "deepseek-flash",
+
+  "_default_depth_comment": [
+    "新建的 AI 节点默认用哪个思考深度：fast / standard / deep。",
+    "深度同时决定模型的思考预算和允许的探索步数——开工之后可以在每个节点上单独改，",
+    "改了不影响已经建好的节点（它们各自存着自己那份选择）。",
+    "三个档位的具体数字见 houdini_ai/config.py 的 DEPTH_PRESETS。"
+  ],
+  "default_depth": "standard",
+
+  "_max_repair_rounds_comment": "它说建完了但 cook 有报错时，自动把报错发回去让它修几轮。",
+  "max_repair_rounds": 3,
+
+  "_max_concurrent_comment": "同时跑几个节点的构建。同一条链上的操作永远串行。",
+  "max_concurrent": 2,
+
+  "_max_tokens_comment": "单次回复的长度上限。**留空 = 完全不传这个字段**（推荐）：思考和答案共享这一个上限，设了就等于给思考也加了天花板——「深入」档要的 16000 思考预算会比它更小，深度就够不着了。本机网关不传也认（它自己的天花板是 65536）。只有官方 Anthropic 端点必填，代码已按域名自动兜底。",
+  "max_tokens": null,
+
+  "_timeout_comment": "单次 HTTP 请求超时（秒）。模型要思考，别设太短。",
+  "timeout": 300,
+
+  "_doc_cache_comment": "节点文档首次抓取后缓存在 .cache/docs/，之后离线可用。",
+  "doc_cache": true
+}
